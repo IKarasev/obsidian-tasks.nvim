@@ -17,11 +17,10 @@ This plugin does not depend on obsidian.nvim and works directly with markdown fi
 
 ## Dependencies
 
-For now only one dependency exists if you wish to use snippets:
+You need patched font like NerdFont for icons to display.
+
+As for plugin dependencies, only one dependency needed only if you wish to use snippets:
 - [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
-
-## Instalation
-
 
 ## Dependencies
 
@@ -69,10 +68,10 @@ Full list of options with default values:
 		taskComplete = "ObTaskComplete",
 		taskCancel = "ObTaskCancel",
 	},
-	recurOnComplite = "replace", -- action for recur task complition
-                                 -- "replace", "add_after", "add_before"
-                                 -- set empty to just mark task complited
-
+    -- set empty to just mark task complited
+    -- action for recur task complition
+    -- values: "replace", "add_after", "add_before"
+	recurOnComplite = "replace", 
 	hl = {                       
         -- highlight groups
 		ObTaskSnipHint = { fg = "#737aa2", italic = true },
@@ -80,8 +79,11 @@ Full list of options with default values:
 	dateOpts = {  
         -- options for date string parsing
         -- automaticly updates if non default date format set
-        -- if changed, the new values will be used
+        -- if changed, these values will be used
+
+        -- pattern to use in date search
 		pat = "(%d%d%d%d)%-(%d%d)%-(%d%d)",
+        -- order of year, month and day in pattern
 		order = {
 			Y = 1,
 			m = 2,

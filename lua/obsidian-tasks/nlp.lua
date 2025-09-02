@@ -66,17 +66,6 @@ local addDays = function(date, n)
 	return date + (n * 86400)
 end
 
--- --- splits given string in separate words
--- ---@param text string
--- ---@return table
--- local getWords = function(text)
--- 	local words = {}
--- 	for w in string.gmatch(text, "%S+") do
--- 		table.insert(words, w)
--- 	end
--- 	return words
--- end
-
 ---@class obsidian-tasks.Words
 ---@field len integer
 ---@field pos integer

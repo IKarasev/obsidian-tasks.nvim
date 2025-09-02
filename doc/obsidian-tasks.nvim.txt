@@ -1,0 +1,308 @@
+*obsidian-tasks.nvim.txt*     Obsidian tasks management for Neovim
+
+==============================================================================
+CONTENTS                                                       *obsidian-tasks*
+
+  1. Introduction ........................ |obsidian-tasks-introduction|
+  2. Installation ........................ |obsidian-tasks-install|
+  3. Configuration ....................... |obsidian-tasks-config|
+  4. Snippets ............................ |obsidian-tasks-snippets|
+  5. Commands ............................ |obsidian-tasks-commands|
+  6. API Reference ....................... |obsidian-tasks-api|
+    obsidian-tasks.config ................ |obsidian-tasks-config-api|
+    obsidian-tasks.snippets .............. |obsidian-tasks-snippets-api|
+    obsidian-tasks.taskline .............. |obsidian-tasks-taskline-api|
+    obsidian-tasks-nlp-api ............... |obsidian-tasks-nlp-api|
+  7. Highlights .......................... |obsidian-tasks-highlight|
+  8. License ............................. |obsidian-tasks-license|
+
+==============================================================================
+1. INTRODUCTION                                   *obsidian-tasks-introduction*
+
+`obsidian-tasks.nvim` provides task management features for Obsidian-style
+Markdown notes inside Neovim. It integrates with tasks in the format:
+
+    - [ ] #task Do something ⏳ 2025-09-02
+
+Features:
+- Define custom task icons and marks.
+- Complete or cancel tasks directly in the buffer.
+- Support for recurring tasks with flexible behavior.
+- Luasnip snippets for creating new tasks.
+- Configurable highlighting for task hints.
+
+==============================================================================
+2. INSTALLATION                                        *obsidian-tasks-install*
+
+Using [lazy.nvim](https://github.com/folke/lazy.nvim) >
+>
+    {
+      "IKarasev/obsidian-tasks.nvim",
+      dependencies = { "L3MON4D3/LuaSnip" }, -- if using snippets
+      lazy = true,
+      ft = "markdown",
+      config = function()
+        require("obsidian-tasks").setup()
+      end,
+    }
+<
+
+Using packer.nvim >
+>
+    use {
+      "IKarasev/obsidian-tasks.nvim",
+      requires = { "L3MON4D3/LuaSnip" }, -- if using snippets
+      ft = {'markdown'},
+      config = function()
+        require("obsidian-tasks").setup()
+      end,
+    }
+<
+
+==============================================================================
+3. CONFIGURATION                                     *obsidian-tasks-config*
+
+Default configuration:
+>
+    require("obsidian-tasks").setup({
+      dateFormat = "%Y-%m-%d",
+      taskTag = "#task",
+      snippets = true,
+      taskIcon = {
+        due = "⏳",
+        scheduled = "📅",
+        start = "🛫",
+        recur = "🔁",
+        created = "➕",
+        complited = "✅",
+        canceled = "❌",
+      },
+      taskMark = {
+        todo = " ",
+        done = "x",
+        canceled = "-",
+        inprogress = "/",
+        nontask = "~",
+      },
+      userCmd = {
+        enabled = true,
+        taskComplete = "ObTaskComplete",
+        taskCancel = "ObTaskCancel",
+      },
+      recurOnComplite = "replace", -- or "add_after", "add_before"
+    })
+<
+
+Notes:
+- `dateFormat`: pattern for dates. Custom formats are supported.
+- `taskTag`: string that marks a line as a task (default: "#task").
+- `recurOnComplite`: controls behavior for recurring tasks when completed.
+
+==============================================================================
+4. SNIPPETS                                          *obsidian-tasks-snippets*
+
+When `snippets = true`, the plugin adds snippets for Markdown files via
+LuaSnip:
+
+- `tt_due` ........ Create a due task.
+- `tt_schedule` ... Create a scheduled task.
+- `tt_recur` ...... Create a recurring task.
+
+Each snippet prompts for description, dates, and recurrence options.
+
+==============================================================================
+5. COMMANDS                                          *obsidian-tasks-commands*
+
+If `userCmd.enabled = true`, the following commands are created:
+
+- *:ObTaskComplete*   Complete the current task line.
+- *:ObTaskCancel*     Cancel the current task line.
+
+==============================================================================
+6. API REFERENCE                                          *obsidian-tasks-api*
+
+-------------------------------------------------------------------------------
+CONFIG MODULE (`obsidian-tasks.config`)             *obsidian-tasks-config-api*
+
+- `setup(opts)`  
+  Initialize plugin configuration.  
+  `opts` is merged with defaults.  
+
+- `getConfig()` → table  
+  Returns the current configuration table.
+
+-------------------------------------------------------------------------------
+SNIPPETS MODULE (`obsidian-tasks.snippets`)       *obsidian-tasks-snippets-api*
+
+- `add_snippets()`  
+  Register LuaSnip snippets for Markdown buffer.  
+  Must be called if snippets are enabled.
+
+-------------------------------------------------------------------------------
+TASKLINE MODULE (`obsidian-tasks.taskline`)       *obsidian-tasks-taskline-api*
+
+- `completeTask()`  
+  Complete the task on the current line.  
+  If the task is recurring, inserts or replaces the next occurrence depending
+  on `config.recurOnComplite`.
+
+- `cancelTask()`  
+  Cancel the task on the current line.
+
+- `endTaskWith({mark, icon})`  
+  End the task at the cursor with the given options.
+  Parameters:
+    {opts} (table) 
+        mark (string) - mark for task status (inside [ ])
+        icon (string) - icon to use before end date
+
+- `getTargetDate(line)` → integer|nil  
+  Extract the scheduled/due/start date from a task line, as `os.time`.  
+
+- `getRecurString(line)` → string  
+  Extract the recurrence rule from a recurring task line.
+
+-------------------------------------------------------------------------------
+NLP MODULE (`obsidian-tasks.nlp`)                      *obsidian-tasks-nlp-api*
+
+Helper module for the obsidian-tasks.nvim plugin. Its primary purpose is to 
+parse human-readable recurrence strings (e.g., "every 3 weeks on the last 
+friday") into a structured `Recur` object, which can then be used to calculate
+the next due date for a task.
+
+It provides two main classes:
+    - `Words` for manipulating and traversing a list of words.
+    - `Recur` for representing and calculating recurrence rules.
+
+[ MODULE METHODS ]
+
+- `getWords({text, lower})` → obsidian-tasks.Words
+  Creates a new `Words` object from a string.
+  Parameters:
+        {opts}  (table) A table with the following keys:
+            text   (string) The text to split into words.
+            lower  (boolean|nil) If true, converts the text to lowercase.
+  Return: ~
+        (obsidian-tasks.Words) A new Words object.
+        See |obsidian-tasks-nlp-words|.
+
+- `parseRecurString(text)` → obsidian-tasks.Recur|nil
+  Parses a recurrence string into a `Recur` object
+  The string should start with "every". Examples:
+        "every day"
+        "every week"
+        "every 2 months"
+        "every week on monday"
+        "every month on the 15th"
+        "every year on january 1st"
+        "every month on the last friday"
+    Parameters:
+        text  (string) The string to parse.
+    Return: ~
+        (obsidian-tasks.Recur|nil) A populated Recur object on success,
+        nil on failure. See |obsidian-tasks-nlp-recur|
+
+[ CLASS Words ]                                     *obsidian-tasks-nlp-words*
+
+A class for manipulating and traversing a list of words from a string.
+
+Fields:
+    len (integer) - number of words
+    pos (integer) - current position
+    w   (table)   - table of word strings
+
+Methods:
+- `Words:sentence()` → string                                 *Words-sentence*
+    Reconstructs the original sentence from the words.
+    Return: ~
+        (string) The words joined by spaces.
+
+- `Words:left(N)                                                  *Words-left*
+    Moves the internal cursor position `N` words towards the start.
+    Parameters:
+        N  (integer) The number of words to move left.
+
+- `Words:right(N)`               								*Words-right*
+    Moves the internal cursor position `N` words towards the end.
+    Parameters:
+        N  (integer) The number of words to move right.
+
+- `Words:cur()` → string	                                      *Words-cur*
+    Gets the word at the current cursor position.
+    Return: ~
+        (string) The current word, or an empty string if out of bounds.
+
+- `Words:next()` → string       								*Words-next*
+    Moves the cursor to the next word and returns it.
+    Return: ~
+        (string) The next word, or an empty string if at the end.
+
+- `Words:prev()` → string       								*Words-prev*
+    Moves the cursor to the previous word and returns it.
+    Return: ~ 
+        (string) The previous word, or an empty string if at the start.
+
+- `Words:getNextN(N)` → table    							*Words-getNextN*
+    Returns a slice of the next `N` words without moving the cursor.
+    Parameters:
+        N  (integer) The number of words to get.
+    Return: ~
+        (table) A table (list) of the next N words.
+
+- `Words:lastN(N)` → string     								*Words-lastN*
+    Returns a slice of the last `N` words from the entire list.
+    Parameters:
+        N  (integer) The number of words to get from the end.
+    Return: ~
+        (table) A table (list) of the last N words.
+
+- `Words:rest()` → table        								*Words-rest*
+    Returns all words from the current position to the end.
+    Return: ~
+        (table) A table (list) of the remaining words.
+
+- `Words:expectNumber()` → integer|nil					*Words-expectNumber*
+    Tries to parse the next word as a number. Moves the cursor on success,
+    leaves it unchanged on failure.
+    Return: ~
+        (integer|nil) The parsed number, or nil.
+
+[ CLASS Recur ]         							*obsidian-tasks-nlp-recur*
+
+A class representing a recurrence rule for calculating next dates.
+
+Fields:
+
+	period  (string)  - base frequency definition (like daily, weekly etc)
+	count   (integer) - how many times to repeat period (like 5 weeks)
+	weekday (integer) - recur on weekdays
+	onmonth (integer) - recur on month
+	wdcount (integer) - count of day/weekday/month for onmonth, weekday 
+                        or day of month
+	onlast  (boolean) - recur on last day of period
+
+Methods:
+
+- `Recur:toString()` → string         							*Recur-toString*
+    Returns a string representation of the Recur object for debugging.
+    Return: ~
+        (string) A descriptive string of the object's properties.
+
+- `Recur:next(date)` → string             							*Recur-next*
+    Calculates the next occurrence date based on the current recurrence
+    rule and a given start date.
+    Parameters:
+        date  (integer) The start date (in seconds, e.g., from `os.time()`).
+    Return: ~
+        (integer) The next occurrence date (in seconds, e.g., for `os.time()`)
+
+==============================================================================
+7. HIGHLIGHTS                                       *obsidian-tasks-highlight*
+
+The following highlight groups are defined:
+
+- *ObTaskSnipHint*   Hint text for snippet placeholders.
+
+==============================================================================
+vim:tw=78:ts=8:noet:ft=help:norl:
+
