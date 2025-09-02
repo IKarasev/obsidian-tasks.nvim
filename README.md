@@ -1,6 +1,6 @@
 # obsidian-tasks.nvim
 
-I use [obsidian.md](https://obsidian.md/) with [tasks](https://publish.obsidian.md/tasks/Introduction),
+I use [obsidian.md](https://obsidian.md/) with [tasks](https://publish.obsidian.md/tasks/Introduction) plugin,
 and I use [obsidian.nvim](https://github.com/obsidian-nvim/obsidian.nvim) to work with my notes in Neovim.
 
 Unfortunatly, the neovim plugin doesn't work with obsidian tasks. So I tried my best to implement some of it
