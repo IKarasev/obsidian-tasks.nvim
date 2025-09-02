@@ -32,8 +32,62 @@ For now, only one dependency exists if you wish to use snippets:
 ### with Lazy.nvim
 
 ```lua
-
+{
+  "IKarasev/obsidian-tasks.nvim",
+  dependencies = { "L3MON4D3/LuaSnip" }, -- if using snippets
+  lazy = true,
+  ft = "markdown",
+  config = function()
+    require("obsidian-tasks").setup()
+  end,
+}
 ```
+
+### with Packer.nvim
+
+```lua
+use {
+  "IKarasev/obsidian-tasks.nvim",
+  requires = { "L3MON4D3/LuaSnip" }, -- if using snippets
+  ft = {'markdown'},
+  config = function()
+    require("obsidian-tasks").setup()
+  end,
+}
+```
+
+## Usage
+
+### Snippets
+
+Plugin creates three snippets:
+- `task_schedule` creates scheduled task:
+```md
+- [ ] #task Do something on 📅 2025-08-12
+```
+- `task_due` creates due task:
+```md
+- [ ] #task Do something due ⏳ 2025-08-20
+```
+- `task_recur` creates recuring task:
+```md
+- [ ] #task Do every month 🔁 every month 🛫 2025-08-13
+```
+
+### Compliting and canceling tasks
+
+Plugin creates two user commands:
+- `ObTaskComplete` - complites task on current line in buffer
+- `ObTaskCancel` - cancels task on current line in buffer
+
+Which can be mapped to a key with `vim.keymap.set()` after plugin setup:
+
+```lua
+vim.keymap.set("n", "<leader>td", ":ObTaskComplete")
+vim.keymap.set("n", "<leader>tc", ":ObTaskCancel")
+```
+
+
 
 ## Configuration
 
@@ -91,5 +145,5 @@ Full list of options with default values:
 		},
 	},
 }
-
 ```
+

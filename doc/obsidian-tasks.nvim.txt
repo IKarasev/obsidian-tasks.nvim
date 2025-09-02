@@ -34,7 +34,7 @@ Features:
 ==============================================================================
 2. INSTALLATION                                        *obsidian-tasks-install*
 
-Using [lazy.nvim](https://github.com/folke/lazy.nvim) >
+Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 >
     {
       "IKarasev/obsidian-tasks.nvim",
@@ -47,7 +47,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim) >
     }
 <
 
-Using packer.nvim >
+Using [packer.nvim](https://github.com/wbthomason/packer.nvim) 
 >
     use {
       "IKarasev/obsidian-tasks.nvim",
@@ -104,9 +104,9 @@ Notes:
 When `snippets = true`, the plugin adds snippets for Markdown files via
 LuaSnip:
 
-- `tt_due` ........ Create a due task.
-- `tt_schedule` ... Create a scheduled task.
-- `tt_recur` ...... Create a recurring task.
+- `task_due` ........ Create a due task.
+- `task_schedule` ... Create a scheduled task.
+- `task_recur` ...... Create a recurring task.
 
 Each snippet prompts for description, dates, and recurrence options.
 

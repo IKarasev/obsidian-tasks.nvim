@@ -53,7 +53,7 @@ local ext_opts = {
 local getSnippets = function()
 	return {
 		s(
-			"tt_due",
+			"task_due",
 			fmt("- [ ] #task {desc}{created} " .. config.taskIcon.due .. " {date}", {
 				desc = i(1, { "desc" }, { node_ext_opts = ext_opts.desc }),
 				created = c(2, { t(""), t(" ➕ " .. cur_date()) }, { node_ext_opts = ext_opts.cur_date }),
@@ -61,7 +61,7 @@ local getSnippets = function()
 			})
 		),
 		s(
-			"tt_schedule",
+			"task_schedule",
 			fmt("- [ ] #task {desc}{created} " .. config.taskIcon.scheduled .. " {date}", {
 				desc = i(1, { "desc" }, { node_ext_opts = ext_opts.desc }),
 				created = c(
@@ -73,7 +73,7 @@ local getSnippets = function()
 			})
 		),
 		s(
-			"tt_recur",
+			"task_recur",
 
 			fmt("- [ ] #task {desc} " .. config.taskIcon.recur .. " every {period}{created} {sttype} {date}", {
 				desc = i(1, { "desc" }, { node_ext_opts = ext_opts.desc }),
