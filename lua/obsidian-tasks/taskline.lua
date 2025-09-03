@@ -242,16 +242,12 @@ M.completeTask = function()
 			end
 		end
 
-		print("Cur Date: " .. os.date(cfg.dateFormat, curDate))
-
 		local r = nlp.parseRecurString(ruleStr)
 		if r == nil then
 			vim.notify("Failed to parse recur string")
 			return
 		end
-		print(r)
 		local nextDate = os.date(cfg.dateFormat, r:next(curDate))
-		print("Next Date: " .. nextDate)
 		local nextTask = replaceTargetDate(line, nextDate)
 		nextDate = taskLineSetStatus(nextDate, cfg.taskMark.todo)
 
