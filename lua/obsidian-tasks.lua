@@ -8,6 +8,8 @@ M.getConfig = function()
 	return config.config
 end
 
+local searchAutocomplete = function() end
+
 ---@param opts table|nil [obsidian-tasks.config.default_config]
 M.setup = function(opts)
 	config.setup(opts)
@@ -35,6 +37,22 @@ M.setup = function(opts)
 			taskline.cancelTask,
 			{ desc = "Canacel obsidian task at current line" }
 		)
+	end
+
+	if cfg.search then
+		local srch = require("obsidian-tasks.search")
+		local picker = require("obsidian-tasks.picker")
+		if cfg.userCmd.enabled then
+			vim.api.nvim_create_user_command(cfg.userCmd.taskFind, function()
+				local s = srch.getSearcher(cfg.searcher)
+				if s == nil then
+					print("Searcher " .. cfg.searcher .. " not found")
+					return
+				end
+				local tasks = s.findActive()
+				picker.telescope(tasks)
+			end, { desc = "Find tasks" })
+		end
 	end
 end
 

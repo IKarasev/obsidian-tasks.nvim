@@ -10,6 +10,9 @@ local default_config = {
 	dateFormat = "%Y-%m-%d",
 	taskTag = "#task",
 	snippets = true,
+	search = true,
+	searcher = "ripgrep",
+	finder = "telescope",
 	taskIcon = {
 		due = "⏳",
 		scheduled = "📅",
@@ -34,10 +37,11 @@ local default_config = {
 			d = 3,
 		},
 	},
-	userCmd = { -- names for plugin cuser commands
+	userCmd = { -- names for plugin user commands
 		enabled = true,
 		taskComplete = "ObTaskComplete",
 		taskCancel = "ObTaskCancel",
+		taskFind = "ObTaskFind",
 	},
 	recurOnComplite = "replace", -- "replace", "add_after", "add_before"
 	hl = {

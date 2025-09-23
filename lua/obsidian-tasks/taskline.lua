@@ -157,6 +157,9 @@ end
 ---@param line string target line
 ---@return integer|nil
 M.getTargetDate = function(line)
+	if type(line) ~= "string" then
+		return nil
+	end
 	local targetDatePat = string.format(
 		"[%s,%s,%s]%%s*%s",
 		cfg.taskIcon.scheduled,
