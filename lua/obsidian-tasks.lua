@@ -38,13 +38,13 @@ M.setup = function(opts)
 	end
 
 	if cfg.search then
-		local srch = require("obsidian-tasks.search")
+		local search = require("obsidian-tasks.search")
 		local picker = require("obsidian-tasks.picker")
-		local searchTypes = srch.getSearchTypes()
-		local searchPeriods = srch.getSearchPeriods()
+		local searchTypes = search.getSearchTypes()
+		local searchPeriods = search.getSearchPeriods()
 		if cfg.userCmd.enabled then
 			vim.api.nvim_create_user_command(cfg.userCmd.taskFind, function(opts)
-				local tasks = srch.findCmdFargs(opts.fargs)
+				local tasks = search.findCmdFargs(opts.fargs)
 				picker.telescope(tasks)
 			end, {
 				desc = "Find tasks",

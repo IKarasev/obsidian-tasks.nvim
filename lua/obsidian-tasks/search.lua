@@ -81,16 +81,16 @@ end
 
 --- filters tasks list based on target date that are later than given date inclusive
 ---@param tasks table[obsidian-tasks.TaskSearchResultItem]
----@param start integer timestamp
+---@param date integer timestamp
 ---@return table[obsidian-tasks.TaskSearchResultItem]
-M.resultsFilterFromDate = function(tasks, start)
+M.resultsFilterAfterDate = function(tasks, date)
 	local result = {}
-	local fromDate = os.date("*t", start)
-	start = os.time({ year = fromDate.year, month = fromDate.month, day = fromDate.day })
+	local fromDate = os.date("*t", date)
+	date = os.time({ year = fromDate.year, month = fromDate.month, day = fromDate.day })
 	for _, task in ipairs(tasks) do
 		local taskTs = tl.getTargetDate(task.text)
 		if taskTs ~= nil then
-			if taskTs >= start then
+			if taskTs >= date then
 				table.insert(result, task)
 			end
 		end
@@ -98,6 +98,30 @@ M.resultsFilterFromDate = function(tasks, start)
 	return result
 end
 
+--- filters tasks list based on target date that are earlier than given date inclusive
+---@param tasks table[obsidian-tasks.TaskSearchResultItem]
+---@param date integer timestamp
+---@return table[obsidian-tasks.TaskSearchResultItem]
+M.resultsFilterBeforeDate = function(tasks, date)
+	local result = {}
+	local tmpDate = os.date("*t", date)
+	date = os.time({ year = tmpDate.year, month = tmpDate.month, day = tmpDate.day, hour = 23, mon = 59, sec = 59 })
+	for _, task in ipairs(tasks) do
+		local taskTs = tl.getTargetDate(task.text)
+		if taskTs ~= nil then
+			if taskTs <= date then
+				table.insert(result, task)
+			end
+		end
+	end
+	return result
+end
+
+--- filters tasks list on target date that in between given days from today
+---@param tasks table[obsidian-tasks.TaskSearchResultItem]
+---@param startDays integer
+---@param endDays integer
+---@return table[obsidian-tasks.TaskSearchResultItem]
 M.resultsFilterPeriodDays = function(tasks, startDays, endDays)
 	local today = os.date("*t")
 	if startDays > endDays then
@@ -134,6 +158,7 @@ M.resultsFilterPeriodDays = function(tasks, startDays, endDays)
 end
 
 --- filters tasks list based on target date from today to given number of days inclusive
+--- if days is negative - than from days till today
 ---@param tasks table[obsidian-tasks.TaskSearchResultItem]
 ---@param days integer
 ---@return table[obsidian-tasks.TaskSearchResultItem]
@@ -154,6 +179,12 @@ M.resultsFilterNextDays = function(tasks, days)
 	return M.resultsFilterPeriod(tasks, startTs, endTs)
 end
 
+M.resultsFilterBeforeDays = function(tasks, days)
+	local today = os.date("*t")
+	today.day = today.day + days
+	return M.resultsFilterBeforeDate(tasks, os.time(today))
+end
+
 --- class to search in files, all search functions should return table
 --- of obsidian-tasks.TaskSearchResultItem
 ---@class obsidian-tasks.BaseSearcher
@@ -163,11 +194,6 @@ end
 ---@field findDone function findes marked done
 ---@field findCanceled function finds marked canceled
 ---@field findInProgress function finds marked in progress
----@field findActiveIn function (n) find active tasks in next n days
----@field findActive function find tasks marked todo and target date in future
----@field findActiveToday function find tasks marked todo today
----@field findActiveWeek function find tasks marked todo for next week
----@field findActiveMonth function find tasks marked todo for next month
 local BaseSearcher = {}
 BaseSearcher.__index = BaseSearcher
 
@@ -207,34 +233,12 @@ end
 ---@return obsidian-tasks.BaseSearcher
 function RgSearcher.new()
 	local rgs = setmetatable({}, BaseSearcher)
-
 	rgs.engine = "ripgrep"
 	rgs.findAll = rgSimpleTaskSearch(".")
 	rgs.findToDo = rgSimpleTaskSearch(taskMarks.todo)
 	rgs.findDone = rgSimpleTaskSearch(taskMarks.done)
 	rgs.findCanceled = rgSimpleTaskSearch(taskMarks.canceled)
 	rgs.findInProgress = rgSimpleTaskSearch(taskMarks.inprogress)
-	rgs.findActiveIn = function(n)
-		local tasks = rgSimpleTaskSearch(taskMarks.todo)()
-		tasks = M.resultsFilterNextDays(tasks, n)
-		return tasks
-	end
-	rgs.findActive = function()
-		local tasks = rgSimpleTaskSearch(taskMarks.taskMark.todo)()
-		tasks = M.resultsFilterFromDate(tasks, os.time())
-		return tasks
-	end
-	rgs.findActiveToday = function()
-		local tasks = rgSimpleTaskSearch(taskMarks.taskMark.todo)()
-		tasks = M.resultsFilterNextDays(tasks, 0)
-		return tasks
-	end
-	rgs.findActiveWeek = function()
-		rgs.findActiveIn(7)
-	end
-	rgs.findActiveMonth = function()
-		rgs.findActiveIn(30)
-	end
 	return rgs
 end
 
@@ -266,19 +270,27 @@ M.findCmdFargs = function(fargs)
 	local periodBase = 0
 	local sType = fargs[1] or searchTypes.all
 	local sPeriod = fargs[2]
-	local countStart = fargs[3]
-	local countEnd = fargs[4]
+	local countStart = tonumber(fargs[3]) or 0
+	local countEnd = tonumber(fargs[4])
 
 	if sType == searchTypes.all then
 		tasks = s.findAll()
-	elseif sType == searchTypes.todo or sType == searchTypes.missed then
+	elseif sType == searchTypes.todo then
 		tasks = s.findToDo()
 	elseif sType == searchTypes.active then
-		tasks = s.findActive()
+		tasks = s.findToDo()
+		tasks = M.resultsFilterAfterDate(tasks, os.time())
+	elseif sType == searchTypes.missed then
+		tasks = s.findToDo()
+		tasks = M.resultsFilterBeforeDate(tasks, os.time())
+		countStart = countStart == 0 and 1 or countStart
 	elseif sType == searchTypes.canceled then
 		tasks = s.findCanceled()
 	elseif sType == searchTypes.done then
 		tasks = s.findDone()
+	else
+		print("Unknown search type: " .. sType)
+		return {}
 	end
 
 	if sPeriod == nil then
@@ -291,14 +303,13 @@ M.findCmdFargs = function(fargs)
 		periodBase = 7
 	elseif sPeriod == searchPeriods.month then
 		periodBase = 30
+	else
+		periodBase = 0
 	end
 
 	if sType == searchTypes.missed then
 		periodBase = -periodBase
 	end
-
-	countStart = tonumber(countStart) or 0
-	countEnd = tonumber(countEnd)
 
 	if countEnd == nil then
 		tasks = M.resultsFilterNextDays(tasks, periodBase * countStart)
