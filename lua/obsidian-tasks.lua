@@ -8,8 +8,6 @@ M.getConfig = function()
 	return config.config
 end
 
-local searchAutocomplete = function() end
-
 ---@param opts table|nil [obsidian-tasks.config.default_config]
 M.setup = function(opts)
 	config.setup(opts)
@@ -42,16 +40,33 @@ M.setup = function(opts)
 	if cfg.search then
 		local srch = require("obsidian-tasks.search")
 		local picker = require("obsidian-tasks.picker")
+		local searchTypes = srch.getSearchTypes()
+		local searchPeriods = srch.getSearchPeriods()
 		if cfg.userCmd.enabled then
-			vim.api.nvim_create_user_command(cfg.userCmd.taskFind, function()
-				local s = srch.getSearcher(cfg.searcher)
-				if s == nil then
-					print("Searcher " .. cfg.searcher .. " not found")
-					return
-				end
-				local tasks = s.findActive()
+			vim.api.nvim_create_user_command(cfg.userCmd.taskFind, function(opts)
+				local tasks = srch.findCmdFargs(opts.fargs)
 				picker.telescope(tasks)
-			end, { desc = "Find tasks" })
+			end, {
+				desc = "Find tasks",
+				nargs = "*",
+				complete = function(arg_lead, cmd_line, cursor_pos)
+					local args = vim.split(cmd_line, "%s+")
+					local argn = #args - 1
+
+					if argn == 1 then
+						return vim.tbl_filter(function(item)
+							return vim.startswith(item, arg_lead)
+						end, searchTypes)
+					end
+
+					if argn == 2 then
+						return vim.tbl_filter(function(item)
+							return vim.startswith(item, arg_lead)
+						end, searchPeriods)
+					end
+					return {}
+				end,
+			})
 		end
 	end
 end

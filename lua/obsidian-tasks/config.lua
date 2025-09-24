@@ -119,6 +119,13 @@ M.getConfig = function()
 	return default_config
 end
 
+M.getMarks = function()
+	if M.config then
+		return M.config.taskMark
+	end
+	return default_config.taskMark
+end
+
 M.setup = function(opts)
 	if opts == nil then
 		M.config = default_config
