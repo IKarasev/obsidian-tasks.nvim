@@ -266,7 +266,7 @@ M.findCmdFargs = function(fargs)
 	local periodBase = 0
 	local sType = fargs[1] or searchTypes.all
 	local sPeriod = fargs[2]
-	local countStart = fargs[3] or 0
+	local countStart = fargs[3]
 	local countEnd = fargs[4]
 
 	if sType == searchTypes.all then
@@ -296,6 +296,9 @@ M.findCmdFargs = function(fargs)
 	if sType == searchTypes.missed then
 		periodBase = -periodBase
 	end
+
+	countStart = tonumber(countStart) or 0
+	countEnd = tonumber(countEnd)
 
 	if countEnd == nil then
 		tasks = M.resultsFilterNextDays(tasks, periodBase * countStart)
