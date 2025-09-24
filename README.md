@@ -17,15 +17,10 @@ This plugin does not depend on obsidian.nvim and works directly with markdown fi
 
 ## Dependencies
 
-You need patched font like NerdFont for icons to display.
+- You need patched font like NerdFont for icons to display.
+- If you wish to use snippets (```snippets = true``` in config), than [luasnip](https://github.com/L3MON4D3/LuaSnip) is required
+- For search to work `ripgrep` is required to be installed and [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) for viewing the results. Other search types and pickers are planned to be added in future.
 
-As for plugin dependencies, only one dependency needed only if you wish to use snippets:
-- [LuaSnip](https://github.com/L3MON4D3/LuaSnip)
-
-## Dependencies
-
-For now, only one dependency exists if you wish to use snippets:
-- [luasnip](https://github.com/L3MON4D3/LuaSnip)
 
 ## Installation
 
@@ -34,11 +29,14 @@ For now, only one dependency exists if you wish to use snippets:
 ```lua
 {
   "IKarasev/obsidian-tasks.nvim",
-  dependencies = { "L3MON4D3/LuaSnip" }, -- if using snippets
+  dependencies = { 
+      "L3MON4D3/LuaSnip", -- if using snippets
+      "nvim-telescope/telescope.nvim", -- if want to search to work
+  },
   lazy = true,
   ft = "markdown",
   config = function()
-    require("obsidian-tasks").setup()
+    require("obsidian-tasks").setup() -- uses default config if no options provided
   end,
 }
 ```
@@ -48,17 +46,20 @@ For now, only one dependency exists if you wish to use snippets:
 ```lua
 use {
   "IKarasev/obsidian-tasks.nvim",
-  requires = { "L3MON4D3/LuaSnip" }, -- if using snippets
+  requires = { 
+      "L3MON4D3/LuaSnip", -- if using snippets
+      "nvim-telescope/telescope.nvim", -- if want to search to work
+  }
   ft = {'markdown'},
   config = function()
-    require("obsidian-tasks").setup()
+    require("obsidian-tasks").setup() -- uses default config if no options provided
   end,
 }
 ```
 
 ## Usage
 
-### Snippets
+### :zap: Snippets
 
 Plugin creates three snippets:
 - `task_schedule` creates scheduled task:
@@ -74,10 +75,10 @@ Plugin creates three snippets:
 - [ ] #task Do every month 🔁 every month 🛫 2025-08-13
 ```
 
-### Compliting and canceling tasks
+### :pencil2: Compliting and canceling tasks
 
 Plugin creates two user commands:
-- `ObTaskComplete` - complites task on current line in buffer
+- `ObTaskComplete` - complites task on current line in buffer; if recurent task, then can replace it with new, or add new depending on chosen option in config (`config.recurOnComplite`)
 - `ObTaskCancel` - cancels task on current line in buffer
 
 Which can be mapped to a key with `vim.keymap.set()` after plugin setup:
@@ -87,6 +88,36 @@ vim.keymap.set("n", "<leader>td", ":ObTaskComplete")
 vim.keymap.set("n", "<leader>tc", ":ObTaskCancel")
 ```
 
+### :mag_right: Search
+
+Tasks search can be disabled in config: `config.search = false`
+
+To perform search, the user command us used in next format:
+
+```
+ObTaskFind ?status ?period ?start ?end
+```
+
+Command argumetns:
+| Arg | Values | Default | Description |
+| --------------- | ------ | --------------- | --------------- |
+| status | all, todo, done, canceled, in_progress, active, missed | all | task status to search<br>- active - todo tasks from today<br>- missed - todo tasks till today |
+| period | day, week, month | day | time period to filter tasks, if status is `missed` - searches tasks in past |
+| start | integer | number of periods from today, if `end` is not set - searchers from today to this number of period |
+| end | integer | if set, searches tasks from `today+start` till `today+end` periods |
+
+All argumetns are optional, if not options given, than lists all tasks. Results displayed in picker (telescope for now).
+
+#### Examples
+
+| Command | Description |
+| -------------- | --------------- |
+| `ObTaskFind` | lists all tasks |
+| `ObTaskFind todo` | lists all todo tasks |
+| `ObTaskFind todo month` | lists todo tasks for next 30 days |
+| `ObTaskFind canceled month -3` | lists canceled tasks for last 90 days |
+| `ObTaskFind missed day 5` | lists missed task for last 5 days|
+| `ObTaskFind todo week 1 3` | lists todo tasks from today+7 day till today+21 day |
 
 
 ## Configuration
@@ -98,6 +129,7 @@ Full list of options with default values:
     dateFormat = "%Y-%m-%d", -- date format to use 
 	taskTag = "#task",       -- tag to use for task identification 
 	snippets = true,         -- load snippets or not
+    search = true,           -- activate seach command
 	taskIcon = {             
         -- icons used for task line parts
 		due = "⏳",
@@ -116,21 +148,7 @@ Full list of options with default values:
 		inprogress = "/",
 		nontask = "~",
 	},
-	userCmd = {              
-        -- names for plugin user commands
-		enabled = true,
-		taskComplete = "ObTaskComplete",
-		taskCancel = "ObTaskCancel",
-	},
-    -- set empty to just mark task complited
-    -- action for recur task complition
-    -- values: "replace", "add_after", "add_before"
-	recurOnComplite = "replace", 
-	hl = {                       
-        -- highlight groups
-		ObTaskSnipHint = { fg = "#737aa2", italic = true },
-	},
-	dateOpts = {  
+	dateOpts = { 
         -- options for date string parsing
         -- automaticly updates if non default date format set
         -- if changed, these values will be used
@@ -143,6 +161,21 @@ Full list of options with default values:
 			m = 2,
 			d = 3,
 		},
+	},
+	userCmd = {              
+        -- names for plugin user commands
+		enabled = true,                  -- enable user commands
+		taskComplete = "ObTaskComplete", -- name for comliting task cmd
+		taskCancel = "ObTaskCancel",     -- name for canceling task cmd
+		taskFind = "ObTaskFind",         -- name for search cmd
+	},
+    -- set empty to just mark task complited
+    -- action for recur task complition
+    -- values: "replace", "add_after", "add_before"
+	recurOnComplite = "replace", 
+	hl = {                       
+        -- highlight groups
+		ObTaskSnipHint = { fg = "#737aa2", italic = true },
 	},
 }
 ```
