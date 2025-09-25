@@ -270,7 +270,7 @@ M.findCmdFargs = function(fargs)
 	local periodBase = 0
 	local sType = fargs[1] or searchTypes.all
 	local sPeriod = fargs[2]
-	local countStart = tonumber(fargs[3]) or 0
+	local countStart = tonumber(fargs[3])
 	local countEnd = tonumber(fargs[4])
 
 	if sType == searchTypes.all then
@@ -298,13 +298,17 @@ M.findCmdFargs = function(fargs)
 	end
 
 	if sPeriod == searchPeriods.day then
+		countStart = countStart == nil and 0 or countStart
 		periodBase = 1
-	elseif sPeriod == searchPeriods.week then
-		periodBase = 7
-	elseif sPeriod == searchPeriods.month then
-		periodBase = 30
 	else
-		periodBase = 0
+		countStart = countStart == nil and 1 or countStart
+		if sPeriod == searchPeriods.week then
+			periodBase = 7
+		elseif sPeriod == searchPeriods.month then
+			periodBase = 30
+		else
+			periodBase = 1
+		end
 	end
 
 	if sType == searchTypes.missed then
