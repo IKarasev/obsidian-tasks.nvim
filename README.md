@@ -103,8 +103,8 @@ Command argumetns:
 | --------------- | ------ | --------------- | --------------- |
 | status | all, todo, done, canceled, in_progress, active, missed | all | task status to search<br>- active - todo tasks from today<br>- missed - todo tasks till today |
 | period | day, week, month | day | time period to filter tasks, if status is `missed` - searches tasks in past |
-| start | integer | number of periods from today, if `end` is not set - searchers from today to this number of period |
-| end | integer | if set, searches tasks from `today+start` till `today+end` periods |
+| start | integer | | number of periods from today, if `end` is not set - searchers from today to this number of period |
+| end | integer | | if set, searches tasks from `today+start` till `today+end` periods |
 
 All argumetns are optional, if not options given, than lists all tasks. Results displayed in picker (telescope for now).
 

@@ -7,14 +7,15 @@ CONTENTS                                                       *obsidian-tasks*
   2. Installation ........................ |obsidian-tasks-install|
   3. Configuration ....................... |obsidian-tasks-config|
   4. Snippets ............................ |obsidian-tasks-snippets|
-  5. Commands ............................ |obsidian-tasks-commands|
-  6. API Reference ....................... |obsidian-tasks-api|
+  5. Search  ............................. |obsidian-tasks-search|
+  6. Commands ............................ |obsidian-tasks-commands|
+  7. API Reference ....................... |obsidian-tasks-api|
     obsidian-tasks.config ................ |obsidian-tasks-config-api|
     obsidian-tasks.snippets .............. |obsidian-tasks-snippets-api|
     obsidian-tasks.taskline .............. |obsidian-tasks-taskline-api|
     obsidian-tasks-nlp-api ............... |obsidian-tasks-nlp-api|
-  7. Highlights .......................... |obsidian-tasks-highlight|
-  8. License ............................. |obsidian-tasks-license|
+  8. Highlights .......................... |obsidian-tasks-highlight|
+  9. License ............................. |obsidian-tasks-license|
 
 ==============================================================================
 1. INTRODUCTION                                   *obsidian-tasks-introduction*
@@ -65,31 +66,46 @@ Using [packer.nvim](https://github.com/wbthomason/packer.nvim)
 Default configuration:
 >
     require("obsidian-tasks").setup({
-      dateFormat = "%Y-%m-%d",
-      taskTag = "#task",
-      snippets = true,
-      taskIcon = {
-        due = "⏳",
-        scheduled = "📅",
-        start = "🛫",
-        recur = "🔁",
-        created = "➕",
-        complited = "✅",
-        canceled = "❌",
-      },
-      taskMark = {
-        todo = " ",
-        done = "x",
-        canceled = "-",
-        inprogress = "/",
-        nontask = "~",
-      },
-      userCmd = {
-        enabled = true,
-        taskComplete = "ObTaskComplete",
-        taskCancel = "ObTaskCancel",
-      },
-      recurOnComplite = "replace", -- or "add_after", "add_before"
+      	dateFormat = "%Y-%m-%d",
+	recurOnComplite = "replace", -- "replace", "add_after", "add_before"
+	taskTag = "#task",
+	snippets = true,
+	search = true,
+	searcher = "ripgrep",
+	finder = "telescope",
+	taskIcon = {
+		due = "⏳",
+		scheduled = "📅",
+		start = "🛫",
+		recur = "🔁",
+		created = "➕",
+		complited = "✅",
+		canceled = "❌",
+	},
+	taskMark = {
+		todo = " ",
+		done = "x",
+		canceled = "-",
+		inprogress = "/",
+		nontask = "~",
+	},
+	dateOpts = {
+		pat = "(%d%d%d%d)%-(%d%d)%-(%d%d)",
+		order = {
+			Y = 1,
+			m = 2,
+			d = 3,
+		},
+	},
+	userCmd = { -- names for plugin user commands
+		enabled = true,
+		taskComplete = "ObTaskComplete",
+		taskCancel = "ObTaskCancel",
+		taskFind = "ObTaskFind",
+	},
+	hl = {
+		ObTaskSnipHint = { fg = "#737aa2", italic = true },
+	},
     })
 <
 
@@ -97,6 +113,7 @@ Notes:
 - `dateFormat`: pattern for dates. Custom formats are supported.
 - `taskTag`: string that marks a line as a task (default: "#task").
 - `recurOnComplite`: controls behavior for recurring tasks when completed.
+- searcher and finder: only ripgrep and telescope for now
 
 ==============================================================================
 4. SNIPPETS                                          *obsidian-tasks-snippets*
@@ -104,22 +121,60 @@ Notes:
 When `snippets = true`, the plugin adds snippets for Markdown files via
 LuaSnip:
 
-- `task_due` ........ Create a due task.
-- `task_schedule` ... Create a scheduled task.
-- `task_recur` ...... Create a recurring task.
+- `task_due`      Create a due task.
+- `task_schedule` Create a scheduled task.
+- `task_recur`    Create a recurring task.
 
 Each snippet prompts for description, dates, and recurrence options.
 
 ==============================================================================
-5. COMMANDS                                          *obsidian-tasks-commands*
+5. SEARCH                                             *obsidian-tasks-search*
+
+Searching and filtering tasks done via usre command `:ObTaskFind` if 
+config.search = true in config.
+
+Search allowes filtering results based on task status and time.
+
+Command:
+`ObTaskFind ?status ?period ?start ?end`
+
+Args:
+- `status` task status to search, `active` is shortcat for todo tasks from
+         today and `missed` is shortcat for todo tasks till today
+         values:  all, todo, done, canceled, in_progress, active, missed
+         default: all
+- `period` time period to filter tasks, if status is missed - searches
+         tasks in past
+	 values:  day, week, month
+	 default: day
+- `day`    number of periods from today, if end is not set - searchers from today 
+         to this number of period
+	 value:   integer or none
+	 default: 0
+- `end`    if set, searches tasks from today+start till today+end periods
+	 value:   integer or none
+	 default: none
+
+Examples:
+
+`ObTaskFind`                    lists all tasks 
+`ObTaskFind todo`               lists all todo tasks
+`ObTaskFind todo month`         lists todo tasks for next 30 days
+`ObTaskFind canceled month -3`  lists canceled tasks for last 90 days
+`ObTaskFind missed day 5`       lists missed task for last 5 days
+`ObTaskFind todo week 1 3`      lists todo tasks from today+7 day till
+                              today+21 day
+==============================================================================
+6. COMMANDS                                          *obsidian-tasks-commands*
 
 If `userCmd.enabled = true`, the following commands are created:
 
 - *:ObTaskComplete*   Complete the current task line.
 - *:ObTaskCancel*     Cancel the current task line.
+- :ObTaskFind	    Search and filter tasks
 
 ==============================================================================
-6. API REFERENCE                                          *obsidian-tasks-api*
+7. API REFERENCE                                          *obsidian-tasks-api*
 
 -------------------------------------------------------------------------------
 CONFIG MODULE (`obsidian-tasks.config`)             *obsidian-tasks-config-api*
@@ -297,7 +352,7 @@ Methods:
         (integer) The next occurrence date (in seconds, e.g., for `os.time()`)
 
 ==============================================================================
-7. HIGHLIGHTS                                       *obsidian-tasks-highlight*
+8. HIGHLIGHTS                                       *obsidian-tasks-highlight*
 
 The following highlight groups are defined:
 
